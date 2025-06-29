@@ -1,282 +1,338 @@
-# Claude Code MCP Server
+# Claude Code Container MCP Server
 
-<img src="assets/claude_code_mcp_logo.png" alt="Claude Code MCP Logo">
+An MCP (Model Context Protocol) server that manages containerized Claude Code sessions, allowing AI assistants to create and control isolated Claude Code instances. Supports both Anthropic API and AWS Bedrock.
 
-[![npm package](https://img.shields.io/npm/v/@steipete/claude-code-mcp)](https://www.npmjs.com/package/@steipete/claude-code-mcp)
-[![View changelog](https://img.shields.io/badge/Explore%20Changelog-brightgreen)](/CHANGELOG.md)
+## Features
 
-An MCP (Model Context Protocol) server that allows running Claude Code in one-shot mode with permissions bypassed automatically.
+- 🐳 **Docker-based Isolation**: Each Claude Code instance runs in its own container
+- 🔄 **Session Management**: Create, execute, and destroy Claude Code sessions
+- 📁 **Volume Mounting**: Persistent storage for project files
+- 🔒 **Security**: Container isolation protects the host system
+- 🚀 **Scalability**: Run multiple sessions simultaneously
+- 🛠️ **Extended Tools**: File transfer, command execution, and log access
+- ☁️ **AWS Bedrock Support**: Use Claude through AWS Bedrock for enterprise deployments
+- 🔑 **Flexible Authentication**: Support for both Anthropic API keys and AWS credentials
 
-Did you notice that Cursor sometimes struggles with complex, multi-step edits or operations? This server, with its powerful unified `claude_code` tool, aims to make Claude a more direct and capable agent for your coding tasks.
+## What's Different?
 
-<img src="assets/screenshot.png" width="300" alt="Screenshot">
+This is a fork of [steipete/claude-code-mcp](https://github.com/steipete/claude-code-mcp) that adds containerization capabilities. Instead of running Claude Code directly, this server manages Docker containers running Claude Code, providing:
 
-## Overview
-
-This MCP server provides one tool that can be used by LLMs to interact with Claude Code. When integrated with Claude Desktop or other MCP clients, it allows LLMs to:
-
-- Run Claude Code with all permissions bypassed (using `--dangerously-skip-permissions`)
-- Execute Claude Code with any prompt without permission interruptions
-- Access file editing capabilities directly
-- Enable specific tools by default
-
-## Benefits
-
-- Claude/Windsurf often have trouble editing files. Claude Code is better and faster at it.
-- Multiple commands can be queued instead of direct execution. This saves context space so more important stuff is retained longer, fewer compacts happen.
-- File ops, git, or other operations don't need costy models. Claude Code is pretty cost effective if you sign up for Antropic Max. You can use Gemini or o3 in Max mode and save costs with offloading tasks to cheaper models.
-- Claude has wider system access and can do things that Cursor/Windsurf can't do (or believe they can't), so whenever they are stuck just ask them "use claude code" and it will usually un-stuck them.
-- Agents in Agents rules.
-
-<img src="assets/agents_in_agents_meme.jpg" alt="Agents in Agents Meme">
+- Better isolation between different projects
+- Ability to run multiple Claude Code instances
+- Protection of the host system
+- Easy cleanup of resources
+- Support for AWS Bedrock as an alternative to Anthropic API
 
 ## Prerequisites
 
-- Node.js v20 or later (Use fnm or nvm to install)
-- Claude CLI installed locally (run it and call /doctor) and `-dangerously-skip-permissions` accepted.
+- Node.js v20 or later
+- Docker installed and running
+- Access to `ghcr.io/Zeeno-atl/claude-code:latest` image
+- Either:
+  - Anthropic API key, OR
+  - AWS credentials with Bedrock access
+
+## Installation
+
+### Using npm (recommended)
+
+```bash
+npm install -g @democratize-technology/claude-code-container-mcp
+```
+
+### Using Docker
+
+```bash
+docker pull ghcr.io/democratize-technology/claude-code-container-mcp:latest
+```
 
 ## Configuration
 
-### Environment Variables
+### For Claude Desktop
 
-- `CLAUDE_CLI_NAME`: Override the Claude CLI binary name or provide an absolute path (default: `claude`). This allows you to use a custom Claude CLI binary. This is useful for:
-  - Using custom Claude CLI wrappers
-  - Testing with mocked binaries
-  - Running multiple Claude CLI versions side by side
-  
-  Supported formats:
-  - Simple name: `CLAUDE_CLI_NAME=claude-custom` or `CLAUDE_CLI_NAME=claude-v2`
-  - Absolute path: `CLAUDE_CLI_NAME=/path/to/custom/claude`
-  
-  Relative paths (e.g., `./claude` or `../claude`) are not allowed and will throw an error.
-  
-  When set to a simple name, the server will look for the specified binary in:
-  1. The system PATH (instead of the default `claude` command)
-  
-  Note: The local user installation path (`~/.claude/local/claude`) will still be checked but only for the default `claude` binary.
+#### Option 1: Using Anthropic API
 
-- `MCP_CLAUDE_DEBUG`: Enable debug logging (set to `true` for verbose output)
-
-## Installation & Usage
-
-The recommended way to use this server is by installing it by using `npx`.
-
-```json
-    "claude-code-mcp": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@steipete/claude-code-mcp@latest"
-      ]
-    },
-```
-
-To use a custom Claude CLI binary name, you can specify the environment variable:
-
-```json
-    "claude-code-mcp": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@steipete/claude-code-mcp@latest"
-      ],
-      "env": {
-        "CLAUDE_CLI_NAME": "claude-custom"
-      }
-    },
-```
-
-## Important First-Time Setup: Accepting Permissions
-
-**Before the MCP server can successfully use the `claude_code` tool, you must first run the Claude CLI manually once with the `--dangerously-skip-permissions` flag, login and accept the terms.**
-
-This is a one-time requirement by the Claude CLI.
-
-```bash
-npm install -g @anthropic-ai/claude-code
-```
-```bash
-claude --dangerously-skip-permissions
-```
-
-Follow the prompts to accept. Once this is done, the MCP server will be able to use the flag non-interactively.
-
-macOS might ask for all kind of folder permissions the first time the tool runs and the first run then fails. Subsequent runs will work.
-
-## Connecting to Your MCP Client
-
-After setting up the server, you need to configure your MCP client (like Cursor or others that use `mcp.json` or `mcp_config.json`).
-
-### MCP Configuration File
-
-The configuration is typically done in a JSON file. The name and location can vary depending on your client.
-
-#### Cursor
-
-Cursor uses `mcp.json`.
-- **macOS:** `~/.cursor/mcp.json`
-- **Windows:** `%APPDATA%\\Cursor\\mcp.json`
-- **Linux:** `~/.config/cursor/mcp.json`
-
-#### Windsurf
-
-Windsurf users use `mcp_config.json`
-- **macOS:** `~/.codeium/windsurf/mcp_config.json`
-- **Windows:** `%APPDATA%\\Codeium\\windsurf\\mcp_config.json`
-- **Linux:** `~/.config/.codeium/windsurf/mcp_config.json`
-
-(Note: In some mixed setups, if Cursor is also installed, these clients might fall back to using Cursor's `~/.cursor/mcp.json` path. Prioritize the Codeium-specific paths if using the Codeium extension.)
-
-Create this file if it doesn't exist. Add or update the configuration for `claude_code`:
-
-## Tools Provided
-
-This server exposes one primary tool:
-
-### `claude_code`
-
-Executes a prompt directly using the Claude Code CLI with `--dangerously-skip-permissions`.
-
-**Arguments:**
-- `prompt` (string, required): The prompt to send to Claude Code.
-- `options` (object, optional):
-  - `tools` (array of strings, optional): Specific Claude tools to enable (e.g., `Bash`, `Read`, `Write`). Common tools are enabled by default.
-
-**Example MCP Request:**
 ```json
 {
-  "toolName": "claude_code:claude_code",
-  "arguments": {
-    "prompt": "Refactor the function foo in main.py to be async."
+  "claude-code-container": {
+    "command": "node",
+    "args": ["/path/to/claude-code-mcp/dist/container-server.js"],
+    "env": {
+      "ANTHROPIC_API_KEY": "your-api-key"
+    }
   }
 }
 ```
 
-### Examples
+#### Option 2: Using AWS Bedrock
 
-Here are some visual examples of the server in action:
+```json
+{
+  "claude-code-container": {
+    "command": "node",
+    "args": ["/path/to/claude-code-mcp/dist/container-server.js"],
+    "env": {
+      "CLAUDE_CODE_USE_BEDROCK": "1",
+      "AWS_REGION": "us-east-1",
+      "AWS_ACCESS_KEY_ID": "your-access-key",
+      "AWS_SECRET_ACCESS_KEY": "your-secret-key",
+      "ANTHROPIC_MODEL": "us.anthropic.claude-opus-4-20250514-v1:0",
+      "ANTHROPIC_SMALL_FAST_MODEL": "us.anthropic.claude-3-5-haiku-20241022-v1:0"
+    }
+  }
+}
+```
 
-<img src="assets/claude_tool_git_example.png" alt="Claude Tool Git Example" width="50%">
+### For Other MCP Clients
 
-<img src="assets/additional_claude_screenshot.png" alt="Additional Claude Screenshot" width="50%">
+See your client's documentation for MCP server configuration.
 
-<img src="assets/cursor-screenshot.png" alt="Cursor Screenshot" width="50%">
+## Available Tools
 
-### Fixing ESLint Setup
+### 1. `create_session`
+Creates a new Claude Code container session.
 
-Here's an example of using the Claude Code MCP tool to interactively fix an ESLint setup by deleting old configuration files and creating a new one:
+**Arguments:**
+- `projectPath` (string, required): Path to mount in the container
+- `sessionName` (string, optional): Human-friendly session name
+- `apiKey` (string, optional): Anthropic API key for this session
+- `useBedrock` (boolean, optional): Use AWS Bedrock instead of Anthropic API
+- `awsRegion` (string, optional): AWS region for Bedrock
+- `awsAccessKeyId` (string, optional): AWS access key ID
+- `awsSecretAccessKey` (string, optional): AWS secret access key
+- `awsSessionToken` (string, optional): AWS session token (for temporary credentials)
+- `bedrockModel` (string, optional): Bedrock model ID
+- `bedrockSmallModel` (string, optional): Bedrock small/fast model ID
 
-<img src="assets/eslint_example.png" alt="ESLint file operations example" width="50%">
+### 2. `execute_in_session`
+Executes a Claude Code command in an existing session.
 
-### Listing Files Example
+**Arguments:**
+- `sessionId` (string, required): Session ID
+- `prompt` (string, required): Prompt for Claude Code
+- `tools` (array of strings, optional): Specific tools to enable
 
-Here's an example of the Claude Code tool listing files in a directory:
+### 3. `list_sessions`
+Lists all active sessions with their status.
 
-<img src="assets/file_list_example.png" alt="File listing example" width="50%">
+### 4. `destroy_session`
+Destroys a Claude Code session and removes the container.
 
-## Key Use Cases
+**Arguments:**
+- `sessionId` (string, required): Session ID to destroy
 
-This server, through its unified `claude_code` tool, unlocks a wide range of powerful capabilities by giving your AI direct access to the Claude Code CLI. Here are some examples of what you can achieve:
+### 5. `transfer_files`
+Transfers files between host and container.
 
-1.  **Code Generation, Analysis & Refactoring:**
-    -   `"Generate a Python script to parse CSV data and output JSON."`
-    -   `"Analyze my_script.py for potential bugs and suggest improvements."`
+**Arguments:**
+- `sessionId` (string, required): Session ID
+- `direction` (string, required): 'to_container' or 'from_container'
+- `sourcePath` (string, required): Source path
+- `destPath` (string, required): Destination path
 
-2.  **File System Operations (Create, Read, Edit, Manage):**
-    -   **Creating Files:** `"Your work folder is /Users/steipete/my_project\n\nCreate a new file named 'config.yml' in the 'app/settings' directory with the following content:\nport: 8080\ndatabase: main_db"`
-    -   **Editing Files:** `"Your work folder is /Users/steipete/my_project\n\nEdit file 'public/css/style.css': Add a new CSS rule at the end to make all 'h2' elements have a 'color: navy'."`
-    -   **Moving/Copying/Deleting:** `"Your work folder is /Users/steipete/my_project\n\nMove the file 'report.docx' from the 'drafts' folder to the 'final_reports' folder and rename it to 'Q1_Report_Final.docx'."`
+### 6. `execute_command`
+Executes an arbitrary command in the container.
 
-3.  **Version Control (Git):**
-    -   `"Your work folder is /Users/steipete/my_project\n\n1. Stage the file 'src/main.java'.\n2. Commit the changes with the message 'feat: Implement user authentication'.\n3. Push the commit to the 'develop' branch on origin."`
+**Arguments:**
+- `sessionId` (string, required): Session ID
+- `command` (string, required): Command to execute
 
-4.  **Running Terminal Commands:**
-    -   `"Your work folder is /Users/steipete/my_project/frontend\n\nRun the command 'npm run build'."`
-    -   `"Open the URL https://developer.mozilla.org in my default web browser."`
+### 7. `get_session_logs`
+Retrieves container logs for debugging.
 
-5.  **Web Search & Summarization:**
-    -   `"Search the web for 'benefits of server-side rendering' and provide a concise summary."`
+**Arguments:**
+- `sessionId` (string, required): Session ID
+- `tail` (number, optional): Number of lines to tail (default: 100)
 
-6.  **Complex Multi-Step Workflows:**
-    -   Automate version bumps, update changelogs, and tag releases: `"Your work folder is /Users/steipete/my_project\n\nFollow these steps: 1. Update the version in package.json to 2.5.0. 2. Add a new section to CHANGELOG.md for version 2.5.0 with the heading '### Added' and list 'New feature X'. 3. Stage package.json and CHANGELOG.md. 4. Commit with message 'release: version 2.5.0'. 5. Push the commit. 6. Create and push a git tag v2.5.0."`
+## Usage Examples
 
-    <img src="assets/multistep_example.png" alt="Complex multi-step operation example" width="50%">
+### Creating a Session with Anthropic API
+```
+Create a new Claude Code session for the project at /home/user/my-project
+```
 
-7.  **Repairing Files with Syntax Errors:**
-    -   `"Your work folder is /path/to/project\n\nThe file 'src/utils/parser.js' has syntax errors after a recent complex edit that broke its structure. Please analyze it, identify the syntax errors, and correct the file to make it valid JavaScript again, ensuring the original logic is preserved as much as possible."`
+### Creating a Session with AWS Bedrock
+```
+Create a new Claude Code session for /home/user/my-project using Bedrock with AWS region us-west-2
+```
 
-8.  **Interacting with GitHub (e.g., Creating a Pull Request):**
-    -   `"Your work folder is /Users/steipete/my_project\n\nCreate a GitHub Pull Request in the repository 'owner/repo' from the 'feature-branch' to the 'main' branch. Title: 'feat: Implement new login flow'. Body: 'This PR adds a new and improved login experience for users.'"`
+### Working with Code
+```
+In session abc123, refactor the main.py file to use async/await
+```
 
-9.  **Interacting with GitHub (e.g., Checking PR CI Status):**
-    -   `"Your work folder is /Users/steipete/my_project\n\nCheck the status of CI checks for Pull Request #42 in the GitHub repository 'owner/repo'. Report if they have passed, failed, or are still running."`
+### Managing Sessions
+```
+List all active sessions
+Destroy session abc123
+```
 
-### Correcting GitHub Actions Workflow
+## AWS Bedrock Configuration
 
-<img src="assets/github_actions_fix_example.png" alt="GitHub Actions workflow fix example" width="50%">
+### Setting up AWS Credentials
 
-### Complex Multi-Step Operations
+The MCP server supports multiple ways to provide AWS credentials:
 
-This example illustrates `claude_code` handling a more complex, multi-step task, such as preparing a release by creating a branch, updating multiple files (`package.json`, `CHANGELOG.md`), committing changes, and initiating a pull request, all within a single, coherent operation.
+1. **Environment Variables** (Global default):
+   ```bash
+   export CLAUDE_CODE_USE_BEDROCK=1
+   export AWS_REGION=us-east-1
+   export AWS_ACCESS_KEY_ID=your-key
+   export AWS_SECRET_ACCESS_KEY=your-secret
+   ```
 
-<img src="assets/claude_code_multistep_example.png" alt="Claude Code multi-step example" width="50%">
+2. **Per-Session Credentials**:
+   When creating a session, you can provide specific AWS credentials that will only be used for that session.
 
-**CRITICAL: Remember to provide Current Working Directory (CWD) context in your prompts for file system or git operations (e.g., `"Your work folder is /path/to/project\n\n...your command..."`).**
+3. **IAM Roles** (if running on AWS):
+   If the MCP server is running on an EC2 instance or ECS, it can use IAM roles.
+
+### Required IAM Permissions
+
+Your AWS credentials need the following Bedrock permissions:
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:InvokeModel",
+        "bedrock:InvokeModelWithResponseStream"
+      ],
+      "Resource": [
+        "arn:aws:bedrock:*::foundation-model/anthropic.claude-*"
+      ]
+    }
+  ]
+}
+```
+
+### Model Access
+
+Ensure you have requested and been granted access to Claude models in AWS Bedrock:
+1. Go to AWS Console > Bedrock > Model access
+2. Request access to Anthropic Claude models
+3. Wait for approval (usually automatic for Claude models)
+
+## Development
+
+### Local Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/democratize-technology/claude-code-mcp.git
+cd claude-code-mcp
+
+# Install dependencies
+npm install
+
+# Build
+npm run build
+
+# Run locally
+npm start
+```
+
+### Using Docker Compose
+
+```bash
+# Copy environment file
+cp .env.example .env
+# Edit .env with your API key or AWS credentials
+
+# Start the service
+docker-compose up -d
+
+# View logs
+docker-compose logs -f mcp-server
+```
+
+## Environment Variables
+
+### General
+- `DEFAULT_CLAUDE_IMAGE`: Docker image to use (default: ghcr.io/zeeno-atl/claude-code:latest)
+- `MCP_CLAUDE_DEBUG`: Enable debug logging (true/false)
+- `DOCKER_HOST`: Docker daemon socket (default: unix:///var/run/docker.sock) (default: unix:///var/run/docker.sock)
+
+### Custom Docker Image
+
+The default base image has hardcoded `/app` paths. We provide a custom image that properly uses `/workspace`:
+
+```bash
+# Build the custom image
+./build-custom-image.sh
+
+# This creates: claude-code-workspace:latest
+```
+
+If you prefer the original image, set:
+```bash
+export DEFAULT_CLAUDE_IMAGE=ghcr.io/zeeno-atl/claude-code:latest
+```
+
+### Anthropic API
+- `ANTHROPIC_API_KEY`: Your Anthropic API key
+
+### AWS Bedrock
+- `CLAUDE_CODE_USE_BEDROCK`: Set to "1" to use Bedrock by default
+- `AWS_REGION`: AWS region where Bedrock is available
+- `AWS_ACCESS_KEY_ID`: AWS access key
+- `AWS_SECRET_ACCESS_KEY`: AWS secret key
+- `AWS_SESSION_TOKEN`: AWS session token (for temporary credentials)
+- `ANTHROPIC_MODEL`: Bedrock model ID for primary model
+- `ANTHROPIC_SMALL_FAST_MODEL`: Bedrock model ID for small/fast model
+
+## Security Considerations
+
+- This server requires access to the Docker daemon, which has security implications
+- Each Claude Code instance runs in an isolated container
+- Containers have limited access to the host system
+- Always review the code Claude Code generates before executing
+- Consider running the MCP server itself in a container for additional isolation
+- When using AWS Bedrock, follow AWS security best practices for credential management
 
 ## Troubleshooting
 
-- **"Command not found" (claude-code-mcp):** If installed globally, ensure the npm global bin directory is in your system's PATH. If using `npx`, ensure `npx` itself is working.
-- **"Command not found" (claude or ~/.claude/local/claude):** Ensure the Claude CLI is installed correctly. Run `claude/doctor` or check its documentation.
-- **Permissions Issues:** Make sure you've run the "Important First-Time Setup" step.
-- **JSON Errors from Server:** If `MCP_CLAUDE_DEBUG` is `true`, error messages or logs might interfere with MCP's JSON parsing. Set to `false` for normal operation.
-- **ESM/Import Errors:** Ensure you are using Node.js v20 or later.
+### Container Creation Fails
+- Ensure Docker is running: `docker ps`
+- Check if the image is accessible: `docker pull ghcr.io/Zeeno-atl/claude-code:latest`
+- Verify your user has Docker permissions
 
-**For Developers: Local Setup & Contribution**
+### Session Not Responding
+- Check container logs: Use the `get_session_logs` tool
+- Verify the container is running: Use `list_sessions`
+- For Anthropic API: Ensure the API key is valid
+- For AWS Bedrock: Check AWS credentials and model access
 
-If you want to develop or contribute to this server, or run it from a cloned repository for testing, please see our [Local Installation & Development Setup Guide](./docs/local_install.md).
+### AWS Bedrock Issues
+- Verify AWS credentials: `aws sts get-caller-identity`
+- Check Bedrock model access in AWS Console
+- Ensure the AWS region supports Bedrock
+- Check IAM permissions for Bedrock InvokeModel
 
-## Testing
-
-The project includes comprehensive test suites:
-
-```bash
-# Run all tests
-npm test
-
-# Run unit tests only
-npm run test:unit
-
-# Run e2e tests (with mocks)
-npm run test:e2e
-
-# Run e2e tests locally (requires Claude CLI)
-npm run test:e2e:local
-
-# Watch mode for development
-npm run test:watch
-
-# Coverage report
-npm run test:coverage
-```
-
-For detailed testing documentation, see our [E2E Testing Guide](./docs/e2e-testing.md).
-
-## Configuration via Environment Variables
-
-The server's behavior can be customized using these environment variables:
-
-- `CLAUDE_CLI_PATH`: Absolute path to the Claude CLI executable.
-  - Default: Checks `~/.claude/local/claude`, then falls back to `claude` (expecting it in PATH).
-- `MCP_CLAUDE_DEBUG`: Set to `true` for verbose debug logging from this MCP server. Default: `false`.
-
-These can be set in your shell environment or within the `env` block of your `mcp.json` server configuration (though the `env` block in `mcp.json` examples was removed for simplicity, it's still a valid way to set them for the server process if needed).
+### Permission Issues
+- The container runs with your user ID to prevent permission problems
+- Ensure the project path is accessible
+- Check Docker socket permissions
 
 ## Contributing
 
-Contributions are welcome! Please refer to the [Local Installation & Development Setup Guide](./docs/local_install.md) for details on setting up your environment.
+Contributions are welcome! Please:
 
-Submit issues and pull requests to the [GitHub repository](https://github.com/steipete/claude-code-mcp).
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
 
 ## License
 
 MIT
+
+## Acknowledgments
+
+- Original [claude-code-mcp](https://github.com/steipete/claude-code-mcp) by Peter Steinberger
+- [Zeeno-atl/claude-code](https://github.com/Zeeno-atl/claude-code) for the containerized Claude Code image
+- Anthropic for Claude and the Model Context Protocol
+- AWS for Bedrock service

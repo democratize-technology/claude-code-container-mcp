@@ -11,11 +11,11 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$SCRIPT_DIR"
 
 # Run the compiled JavaScript file for npm packages OR TypeScript for local development
-if [ -f "dist/server.js" ]; then
-    node dist/server.js
-elif [ -f "src/server.ts" ] && command -v tsx >/dev/null 2>&1; then
-    npx tsx src/server.ts
+if [ -f "dist/container-server.js" ]; then
+    node dist/container-server.js
+elif [ -f "src/container-server.ts" ] && command -v tsx >/dev/null 2>&1; then
+    npx tsx src/container-server.ts
 else
-    echo "Error: Neither dist/server.js nor src/server.ts found"
+    echo "Error: Neither dist/container-server.js nor src/container-server.ts found"
     exit 1
 fi

@@ -1,0 +1,17 @@
+node_modules
+dist
+*.log
+.git
+.gitignore
+README.md
+.env
+.env.*
+!.env.example
+.vscode
+.cursor
+coverage
+.nyc_output
+.DS_Store
+*.swp
+*.swo
+*~

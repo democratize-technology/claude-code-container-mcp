@@ -6,4 +6,4 @@ REM Get the directory of this script
 SET SCRIPT_DIR=%~dp0
 
 REM Start the server with the correct path
-node "%SCRIPT_DIR%dist\server.js"
+node "%SCRIPT_DIR%dist\container-server.js"

@@ -1,32 +1,36 @@
 {
-  "name": "@steipete/claude-code-mcp",
-  "version": "1.10.12",
-  "description": "Simple MCP server for Claude Code one-shot execution",
-  "author": "Peter Steinberger",
+  "name": "@democratize-technology/claude-code-container-mcp",
+  "version": "2.0.0",
+  "description": "MCP server for containerized Claude Code session management",
+  "author": "democratize-technology (forked from Peter Steinberger)",
   "license": "MIT",
-  "main": "dist/server.js",
+  "main": "dist/container-server.js",
   "bin": {
-    "claude-code-mcp": "dist/server.js"
+    "claude-code-container-mcp": "dist/container-server.js"
   },
   "scripts": {
     "build": "tsc",
-    "start": "node dist/server.js",
-    "dev": "tsx src/server.ts",
+    "start": "node dist/container-server.js",
+    "dev": "tsx src/container-server.ts",
     "test": "npm run build && vitest",
     "test:unit": "vitest run --config vitest.config.unit.ts",
     "test:e2e": "npm run build && vitest run --config vitest.config.e2e.ts",
-    "test:e2e:local": "npm run build && vitest run --config vitest.config.e2e.ts",
     "test:coverage": "npm run build && vitest --coverage --config vitest.config.unit.ts",
-    "test:watch": "vitest --watch"
+    "test:watch": "vitest --watch",
+    "postinstall": "npm run build || echo 'Build failed, continuing...'"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.11.2",
+    "dockerode": "^4.0.2",
+    "uuid": "^9.0.1",
     "zod": "^3.24.4"
   },
   "type": "module",
   "devDependencies": {
     "@eslint/js": "^9.26.0",
+    "@types/dockerode": "^3.3.31",
     "@types/node": "^22.15.17",
+    "@types/uuid": "^9.0.8",
     "@vitest/coverage-v8": "^2.1.8",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3",
@@ -34,7 +38,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/steipete/claude-code-mcp.git"
+    "url": "git+https://github.com/democratize-technology/claude-code-mcp.git"
   },
   "keywords": [
     "mcp",
@@ -42,10 +46,12 @@
     "claude",
     "ai",
     "llm",
-    "tools"
+    "tools",
+    "docker",
+    "container"
   ],
   "bugs": {
-    "url": "https://github.com/steipete/claude-code-mcp/issues"
+    "url": "https://github.com/democratize-technology/claude-code-mcp/issues"
   },
-  "homepage": "https://github.com/steipete/claude-code-mcp#readme"
+  "homepage": "https://github.com/democratize-technology/claude-code-mcp#readme"
 }
