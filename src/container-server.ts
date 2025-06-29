@@ -78,37 +78,163 @@ class ClaudeCodeContainerServer {
         {
           name: 'create_session',
           description: 'Create a new Claude Code container session',
-          inputSchema: CreateSessionSchema,
+          inputSchema: {
+            type: 'object',
+            properties: {
+              projectPath: {
+                type: 'string',
+                description: 'Path to mount in the container'
+              },
+              sessionName: {
+                type: 'string',
+                description: 'Optional session name'
+              },
+              apiKey: {
+                type: 'string',
+                description: 'Anthropic API key for this session'
+              },
+              useBedrock: {
+                type: 'boolean',
+                description: 'Use AWS Bedrock instead of Anthropic API'
+              },
+              awsRegion: {
+                type: 'string',
+                description: 'AWS region for Bedrock'
+              },
+              awsAccessKeyId: {
+                type: 'string',
+                description: 'AWS access key ID'
+              },
+              awsSecretAccessKey: {
+                type: 'string',
+                description: 'AWS secret access key'
+              },
+              awsSessionToken: {
+                type: 'string',
+                description: 'AWS session token'
+              },
+              bedrockModel: {
+                type: 'string',
+                description: 'Bedrock model ID'
+              },
+              bedrockSmallModel: {
+                type: 'string',
+                description: 'Bedrock small/fast model ID'
+              }
+            },
+            required: ['projectPath']
+          },
         },
         {
           name: 'execute_in_session',
           description: 'Execute Claude Code in a specific session',
-          inputSchema: ExecuteInSessionSchema,
+          inputSchema: {
+            type: 'object',
+            properties: {
+              sessionId: {
+                type: 'string',
+                description: 'Session ID'
+              },
+              prompt: {
+                type: 'string',
+                description: 'Prompt for Claude Code'
+              },
+              tools: {
+                type: 'array',
+                items: {
+                  type: 'string'
+                },
+                description: 'Specific tools to enable'
+              }
+            },
+            required: ['sessionId', 'prompt']
+          },
         },
         {
           name: 'list_sessions',
           description: 'List all active sessions',
-          inputSchema: {},
+          inputSchema: {
+            type: 'object',
+            properties: {}
+          },
         },
         {
           name: 'destroy_session',
           description: 'Destroy a Claude Code session',
-          inputSchema: SessionIdSchema,
+          inputSchema: {
+            type: 'object',
+            properties: {
+              sessionId: {
+                type: 'string',
+                description: 'Session ID'
+              }
+            },
+            required: ['sessionId']
+          },
         },
         {
           name: 'transfer_files',
           description: 'Transfer files between host and container',
-          inputSchema: TransferFilesSchema,
+          inputSchema: {
+            type: 'object',
+            properties: {
+              sessionId: {
+                type: 'string',
+                description: 'Session ID'
+              },
+              direction: {
+                type: 'string',
+                enum: ['to_container', 'from_container'],
+                description: 'Transfer direction'
+              },
+              sourcePath: {
+                type: 'string',
+                description: 'Source path'
+              },
+              destPath: {
+                type: 'string',
+                description: 'Destination path'
+              }
+            },
+            required: ['sessionId', 'direction', 'sourcePath', 'destPath']
+          },
         },
         {
           name: 'execute_command',
           description: 'Execute arbitrary command in container',
-          inputSchema: ExecuteCommandSchema,
+          inputSchema: {
+            type: 'object',
+            properties: {
+              sessionId: {
+                type: 'string',
+                description: 'Session ID'
+              },
+              command: {
+                type: 'string',
+                description: 'Command to execute'
+              }
+            },
+            required: ['sessionId', 'command']
+          },
         },
         {
           name: 'get_session_logs',
           description: 'Get container logs for debugging',
-          inputSchema: GetLogsSchema,
+          inputSchema: {
+            type: 'object',
+            properties: {
+              sessionId: {
+                type: 'string',
+                description: 'Session ID'
+              },
+              tail: {
+                type: 'number',
+                description: 'Number of lines to tail',
+                default: 100
+              }
+            },
+            required: ['sessionId']
+          },
         },
       ],
     }));
