@@ -200,9 +200,31 @@ The `mcpMounts` parameter allows you to mount MCP server directories into the co
 }
 ```
 
-### Using mcpConfig (Limited Support)
+### Using mcpConfig
 
-The `mcpConfig` parameter passes MCP server configuration to the container via the `MCP_CONFIG` environment variable:
+⚠️ **Important**: The `mcpConfig` parameter requires a custom Docker image. The default Claude Code container does not process the `MCP_CONFIG` environment variable.
+
+#### Building the Custom Image
+
+1. Build the custom image with MCP support:
+   ```bash
+   ./build-mcp-image.sh
+   ```
+
+2. Configure your MCP server to use the custom image:
+   ```json
+   {
+     "claude-code-container": {
+       "env": {
+         "DEFAULT_CLAUDE_IMAGE": "claude-code-mcp:latest"
+       }
+     }
+   }
+   ```
+
+#### Using mcpConfig
+
+Once the custom image is built and configured, you can pass MCP server configuration:
 
 ```json
 {

@@ -1,0 +1,14 @@
+FROM ghcr.io/zeeno-atl/claude-code:latest
+
+# Install jq
+RUN apt-get update && apt-get install -y jq && rm -rf /var/lib/apt/lists/*
+
+# Copy MCP wrapper  
+COPY mcp-wrapper.sh /mcp-wrapper.sh
+RUN chmod +x /mcp-wrapper.sh
+
+# Set it as the entrypoint
+ENTRYPOINT ["/mcp-wrapper.sh"]
+
+# Keep original CMD
+CMD ["tail", "-f", "/dev/null"]
