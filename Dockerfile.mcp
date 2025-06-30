@@ -1,7 +1,11 @@
 FROM ghcr.io/zeeno-atl/claude-code:latest
 
-# Install jq
-RUN apt-get update && apt-get install -y jq && rm -rf /var/lib/apt/lists/*
+# Install jq and curl
+RUN apt-get update && apt-get install -y jq curl && rm -rf /var/lib/apt/lists/*
+
+# Install uv (Python package manager)
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+ENV PATH="/root/.local/bin:${PATH}"
 
 # Copy MCP wrapper  
 COPY mcp-wrapper.sh /mcp-wrapper.sh

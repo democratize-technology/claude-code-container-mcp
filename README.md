@@ -211,6 +211,12 @@ The `mcpMounts` parameter allows you to mount MCP server directories into the co
    ./build-mcp-image.sh
    ```
 
+   The custom image includes:
+   - MCP configuration processor (processes `MCP_CONFIG` environment variable)
+   - `jq` for JSON processing
+   - `uv` for Python-based MCP servers
+   - `npx` (from base image) for JavaScript/TypeScript MCP servers
+
 2. Configure your MCP server to use the custom image:
    ```json
    {
