@@ -6,6 +6,7 @@ import * as fs from 'fs/promises';
 import * as fsSync from 'fs';
 import * as path from 'path';
 import * as os from 'os';
+import { McpMount } from '../types/schemas.js';
 
 const execAsync = promisify(exec);
 
@@ -20,6 +21,8 @@ interface CreateContainerOptions {
   awsSessionToken?: string;
   bedrockModel?: string;
   bedrockSmallModel?: string;
+  mcpMounts?: McpMount[];
+  mcpConfig?: { mcpServers: Record<string, any> };
 }
 
 interface ExecuteClaudeOptions {
@@ -66,6 +69,8 @@ export class DockerManager {
       awsSessionToken = process.env.AWS_SESSION_TOKEN,
       bedrockModel = process.env.ANTHROPIC_MODEL || 'us.anthropic.claude-3-5-sonnet-20241022-v2:0',
       bedrockSmallModel = process.env.ANTHROPIC_SMALL_FAST_MODEL || 'us.anthropic.claude-3-5-haiku-20241022-v1:0',
+      mcpMounts = [],
+      mcpConfig,
     } = options;
 
     console.error(`Creating Claude Code container with:`, {
@@ -119,6 +124,11 @@ export class DockerManager {
         );
       }
 
+      // Add MCP config if provided
+      if (mcpConfig) {
+        envVars.push(`MCP_CONFIG=${Buffer.from(JSON.stringify(mcpConfig)).toString('base64')}`);
+      }
+
       console.error('Creating Docker container...');
 
       // For SSH connections, use Docker CLI instead of dockerode
@@ -139,6 +149,15 @@ export class DockerManager {
           '-v',
           'claude-code-npm-cache:/npm-cache',
         ];
+
+        // Add MCP mounts
+        for (const mount of mcpMounts) {
+          const mountStr = mount.readOnly !== false 
+            ? `${mount.hostPath}:${mount.containerPath}:ro`
+            : `${mount.hostPath}:${mount.containerPath}`;
+          dockerArgs.push('-v', mountStr);
+          console.error(`Adding MCP mount: ${mountStr}`);
+        }
 
         // Add environment variables
         for (const env of envVars) {
@@ -170,13 +189,26 @@ export class DockerManager {
         if (!this.docker) {
           throw new Error('Docker client not initialized');
         }
+        
+        // Build binds array
+        const binds = [`${projectPath}:/app`, 'claude-code-npm-cache:/npm-cache'];
+        
+        // Add MCP mounts
+        for (const mount of mcpMounts) {
+          const mountStr = mount.readOnly !== false 
+            ? `${mount.hostPath}:${mount.containerPath}:ro`
+            : `${mount.hostPath}:${mount.containerPath}`;
+          binds.push(mountStr);
+          console.error(`Adding MCP mount: ${mountStr}`);
+        }
+        
         const container = await this.docker.createContainer({
           name,
           Image: this.defaultImage,
           Cmd: ['tail', '-f', '/dev/null'],
           Env: envVars,
           HostConfig: {
-            Binds: [`${projectPath}:/app`, 'claude-code-npm-cache:/npm-cache'],
+            Binds: binds,
             AutoRemove: false,
           },
           WorkingDir: '/app',

@@ -1,0 +1,58 @@
+// Example MCP Mount Configurations
+
+// 1. Basic MCP server mount
+{
+  "tool": "create_session",
+  "arguments": {
+    "projectPath": "/home/jeremy/my-project",
+    "sessionName": "basic-mcp",
+    "mcpMounts": [
+      {
+        "hostPath": "/home/jeremy/mcp-servers",
+        "containerPath": "/mcp-servers"
+      }
+    ]
+  }
+}
+
+// 2. Multiple MCP directories
+{
+  "tool": "create_session", 
+  "arguments": {
+    "projectPath": "/home/jeremy/webapp",
+    "sessionName": "multi-mcp",
+    "mcpMounts": [
+      {
+        "hostPath": "/home/jeremy/mcp-servers",
+        "containerPath": "/mcp-servers"
+      },
+      {
+        "hostPath": "/opt/mcp/production",
+        "containerPath": "/opt/mcp/production",
+        "readOnly": true
+      },
+      {
+        "hostPath": "/var/lib/mcp-data",
+        "containerPath": "/mcp-data",
+        "readOnly": false  // Explicit write access
+      }
+    ]
+  }
+}
+
+// 3. AWS Bedrock with MCP
+{
+  "tool": "create_session",
+  "arguments": {
+    "projectPath": "/home/jeremy/ml-project",
+    "sessionName": "bedrock-mcp",
+    "useBedrock": true,
+    "awsRegion": "us-east-1",
+    "mcpMounts": [
+      {
+        "hostPath": "/home/jeremy/mcp-servers",
+        "containerPath": "/mcp-servers"
+      }
+    ]
+  }
+}

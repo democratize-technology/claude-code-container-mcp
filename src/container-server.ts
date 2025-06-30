@@ -120,6 +120,38 @@ class ClaudeCodeContainerServer {
               bedrockSmallModel: {
                 type: 'string',
                 description: 'Bedrock small/fast model ID'
+              },
+              mcpMounts: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    hostPath: {
+                      type: 'string',
+                      description: 'Path on Docker host to mount'
+                    },
+                    containerPath: {
+                      type: 'string', 
+                      description: 'Path in container where to mount'
+                    },
+                    readOnly: {
+                      type: 'boolean',
+                      description: 'Mount as read-only (default: true)'
+                    }
+                  },
+                  required: ['hostPath', 'containerPath']
+                },
+                description: 'MCP server directories to mount'
+              },
+              mcpConfig: {
+                type: 'object',
+                properties: {
+                  mcpServers: {
+                    type: 'object',
+                    description: 'MCP servers configuration'
+                  }
+                },
+                description: 'MCP configuration to write to container'
               }
             },
             required: ['projectPath']

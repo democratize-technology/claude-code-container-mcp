@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { Session } from '../types/schemas.js';
+import { Session, McpMount } from '../types/schemas.js';
 import { DockerManager } from '../docker/manager.js';
 
 export class SessionManager {
@@ -18,6 +18,8 @@ export class SessionManager {
     awsSessionToken?: string;
     bedrockModel?: string;
     bedrockSmallModel?: string;
+    mcpMounts?: McpMount[];
+    mcpConfig?: { mcpServers: Record<string, any> };
   }): Promise<Session> {
     const sessionId = uuidv4();
     const sessionName = params.sessionName || `claude-session-${Date.now()}`;
@@ -43,7 +45,8 @@ export class SessionManager {
       containerId,
       containerName,
       projectPath: params.projectPath,
-      createdAt: new Date()
+      createdAt: new Date(),
+      mcpMounts: params.mcpMounts
     };
 
     this.sessions.set(sessionId, session);

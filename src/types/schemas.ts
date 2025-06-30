@@ -1,5 +1,12 @@
 import { z } from 'zod';
 
+// MCP mount configuration
+export const McpMountSchema = z.object({
+  hostPath: z.string().describe('Path on Docker host'),
+  containerPath: z.string().describe('Path in container'),
+  readOnly: z.boolean().optional().default(true).describe('Mount as read-only')
+});
+
 // Session management schemas
 export const CreateSessionSchema = z.object({
   projectPath: z.string().describe('Path to mount in the container'),
@@ -11,7 +18,11 @@ export const CreateSessionSchema = z.object({
   awsSecretAccessKey: z.string().optional().describe('AWS secret access key'),
   awsSessionToken: z.string().optional().describe('AWS session token'),
   bedrockModel: z.string().optional().describe('Bedrock model ID'),
-  bedrockSmallModel: z.string().optional().describe('Bedrock small/fast model ID')
+  bedrockSmallModel: z.string().optional().describe('Bedrock small/fast model ID'),
+  mcpMounts: z.array(McpMountSchema).optional().describe('MCP server directories to mount'),
+  mcpConfig: z.object({
+    mcpServers: z.record(z.any())
+  }).optional().describe('MCP configuration to write to container')
 });
 
 export const SessionIdSchema = z.object({
@@ -51,6 +62,7 @@ export type TransferFilesParams = z.infer<typeof TransferFilesSchema>;
 export type ExecuteCommandParams = z.infer<typeof ExecuteCommandSchema>;
 export type SessionIdParams = z.infer<typeof SessionIdSchema>;
 export type GetLogsParams = z.infer<typeof GetLogsSchema>;
+export type McpMount = z.infer<typeof McpMountSchema>;
 
 // Session interface
 export interface Session {
@@ -60,4 +72,5 @@ export interface Session {
   containerName: string;
   projectPath: string;
   createdAt: Date;
+  mcpMounts?: McpMount[];
 }

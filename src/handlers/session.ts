@@ -19,6 +19,7 @@ export class SessionHandler {
             projectPath: session.projectPath,
             useBedrock: params.useBedrock || false,
             ...(params.useBedrock && { awsRegion: params.awsRegion }),
+            ...(params.mcpMounts && { mcpMounts: params.mcpMounts }),
           }, null, 2),
         },
       ],

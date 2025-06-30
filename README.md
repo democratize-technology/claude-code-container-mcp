@@ -103,6 +103,16 @@ Creates a new Claude Code container session.
 - `awsSessionToken` (string, optional): AWS session token (for temporary credentials)
 - `bedrockModel` (string, optional): Bedrock model ID
 - `bedrockSmallModel` (string, optional): Bedrock small/fast model ID
+- `mcpMounts` (array, optional): MCP server directories to mount in the container
+  - Each mount object contains:
+    - `hostPath` (string, required): Path on Docker host to mount
+    - `containerPath` (string, required): Path in container where to mount
+    - `readOnly` (boolean, optional): Mount as read-only (default: true)
+- `mcpConfig` (object, optional): MCP configuration passed to container as MCP_CONFIG environment variable
+  - **⚠️ Note**: The Claude Code container does NOT automatically process this configuration
+  - The MCP_CONFIG is set as a base64-encoded environment variable but requires manual processing
+  - Contains:
+    - `mcpServers` (object, required): MCP servers configuration
 
 ### 2. `execute_in_session`
 Executes a Claude Code command in an existing session.
@@ -165,6 +175,64 @@ In session abc123, refactor the main.py file to use async/await
 ```
 List all active sessions
 Destroy session abc123
+```
+
+## MCP Configuration
+
+### Using mcpMounts
+
+The `mcpMounts` parameter allows you to mount MCP server directories into the container:
+
+```json
+{
+  "tool": "create_session",
+  "arguments": {
+    "projectPath": "/home/user/my-project",
+    "sessionName": "with-mcp-mounts",
+    "mcpMounts": [
+      {
+        "hostPath": "/opt/mcp-servers",
+        "containerPath": "/opt/mcp-servers",
+        "readOnly": true
+      }
+    ]
+  }
+}
+```
+
+### Using mcpConfig (Limited Support)
+
+The `mcpConfig` parameter passes MCP server configuration to the container via the `MCP_CONFIG` environment variable:
+
+```json
+{
+  "tool": "create_session",
+  "arguments": {
+    "projectPath": "/home/user/my-project",
+    "sessionName": "with-mcp-config",
+    "mcpConfig": {
+      "mcpServers": {
+        "sequential-thinking": {
+          "command": "npx",
+          "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+        }
+      }
+    }
+  }
+}
+```
+
+**⚠️ Important Limitation**: The Claude Code container does NOT automatically process the `MCP_CONFIG` environment variable. To use this configuration, you must manually merge it into `.claude.json` after creating the session:
+
+```bash
+# Inside the container, run:
+echo $MCP_CONFIG | base64 -d | python3 -c "
+import json, sys
+config = json.load(open('/root/.claude.json'))
+mcp = json.load(sys.stdin)
+config['projects']['/app']['mcpServers'] = mcp['mcpServers']
+json.dump(config, open('/root/.claude.json', 'w'), indent=2)
+"
 ```
 
 ## AWS Bedrock Configuration
